@@ -41,10 +41,12 @@ function decodeJwt(jwtFile, publicKeyFile, forceAlg) {
 
     console.log(jwt);
     const [headerStr, payloadStr, signature] = jwt.split('.');
-    //console.log(header, payload, signature);
+
     const header = JSON.parse(Buffer.from(base64urlUnescape(headerStr), 'base64'));
     const payload = JSON.parse(Buffer.from(base64urlUnescape(payloadStr), 'base64'));
-    console.log(header, payload);
+
+    console.log(header);
+    console.log(payload);
 
     var publicKey = crypto.createPublicKey(
         {
@@ -61,8 +63,6 @@ function decodeJwt(jwtFile, publicKeyFile, forceAlg) {
 
     console.log(`\nSignature Verified: ${verification}`);
 }
-
-//console.log(argv);
 
 if ((!argv.alg || !argv.sub || !argv.aud || !argv.iss) && (!argv.jwtfile || !argv.publickey)) {
     console.error('usage: node app.js [--alg=[RSA-SHA256 | RSA-SHA512] [--privatekey=filename --dumpkeys] [--ttl=expirationSeconds] --sub=SUBJECT --aud=AUDIENCE --iss=ISSUER] | [--jwtfile=filname --publickey=filename --forcealg=[RSA-SHA256 | RSA-SHA512]]');
@@ -97,8 +97,13 @@ if (!argv.privatekey) {
 } else {
     // Load private key from file
     const fs = require('fs');
-    const privateKeyString = fs.readFileSync(argv.privatekey, 'utf-8', 'r+');
-    //console.log(privateKeyString);
+
+    try {
+        var privateKeyString = fs.readFileSync(argv.privatekey, 'utf-8', 'r+');
+    } catch (ex) {
+        console.error(`Failed to load private key: ${argv.privatekey}`);
+        process.exit(3);
+    }
 
     var privateKey = crypto.createPrivateKey(
         {
@@ -135,5 +140,5 @@ const sign = crypto
 
 const jwt = `${b64Header}.${b64Payload}` + '.' + base64urlEncode(sign);
 
-console.log('jwt:\n' + jwt);
+console.log(jwt);
 
